@@ -127,7 +127,7 @@ class MoveGroupPythonInterfaceTutorial(object):
         ## If you are using a different robot, change this value to the name of your robot
         ## arm planning group.
         ## This interface can be used to plan and execute motions:
-        group_name = "arm_no_grip"
+        group_name = "all"
         move_group = moveit_commander.MoveGroupCommander(group_name)
 
         ## Create a `DisplayTrajectory`_ ROS publisher which is used to display
@@ -210,16 +210,16 @@ class MoveGroupPythonInterfaceTutorial(object):
         current_joints = move_group.get_current_joint_values()
         return all_close(joint_goal, current_joints, 0.01)
 
-    def go_to_pose_goal(self):
+    def go_to_pose_goal(self, x, y, z, qx = 0, qy = 0, qz = 0, qw= 1):
         # Copy class variables to local variables to make the web tutorials more clear.
         # In practice, you should use the class variables directly unless you have a good
         # reason not to.
-        print("go to pose goal")
+        # print("go to pose goal")
         move_group = self.move_group
 
-        x=float(input("X: "))
-        y=float(input("Y: "))
-        z=float(input("Z: "))
+        # x=float(input("X: "))
+        # y=float(input("Y: "))
+        # z=float(input("Z: "))
         # w=float(input("W: "))
 
 
@@ -230,10 +230,10 @@ class MoveGroupPythonInterfaceTutorial(object):
         ## We can plan a motion for this group to a desired pose for the
         ## end-effector:
         pose_goal = geometry_msgs.msg.Pose()
-        qx = np.sin(np.pi / 2.0)
-        qy = 0.0
-        qz = 0.0
-        qw = np.cos(np.pi / 2.0)
+        # qx = np.sin(np.pi / 2.0)
+        # qy = 0.0
+        # qz = 0.0
+        # qw = np.cos(np.pi / 2.0)
 
         pose_goal.orientation.x = qx
         pose_goal.orientation.y = qy
@@ -245,9 +245,9 @@ class MoveGroupPythonInterfaceTutorial(object):
         pose_goal.position.z = z
 
         move_group.set_pose_target(pose_goal)
-        print("x: ", pose_goal.position.x)
-        print("y: ", pose_goal.position.y)
-        print("z: ", pose_goal.position.z)
+        # print("x: ", pose_goal.position.x)
+        # print("y: ", pose_goal.position.y)
+        # print("z: ", pose_goal.position.z)
 
         ## Now, we call the planner to compute the plan and execute it.
         # `go()` returns a boolean indicating whether the planning and execution was successful.
@@ -520,80 +520,57 @@ class MoveGroupPythonInterfaceTutorial(object):
 # # User input final end effector position, move_group.plan() will plan trajectory, 
 # then print out final joints excluding the gripper joint.
 
-    def plan_robot_position(self):
+    def plan_robot_position(self, x, y, z, qx = 0, qy = 0, qz = 0, qw= 1):
+        print("go to pose goal")
         move_group = self.move_group
 
-        while True:
-            try:
-                x=float(input("X: "))
-                y=float(input("Y: "))
-                z=float(input("Z: "))
-                # w=float(input("W: "))
+        # x=float(input("X: "))
+        # y=float(input("Y: "))
+        # z=float(input("Z: "))
+        # w=float(input("W: "))
 
 
-                ## BEGIN_SUB_TUTORIAL plan_to_pose
-                ##
-                ## Planning to a Pose Goal
-                ## ^^^^^^^^^^^^^^^^^^^^^^^
-                ## We can plan a motion for this group to a desired pose for the
-                ## end-effector:
-                pose_goal = geometry_msgs.msg.Pose()
-                qx = np.sin(np.pi / 2.0)
-                qy = 0.0
-                qz = 0.0
-                qw = np.cos(np.pi / 2.0)
+        ## BEGIN_SUB_TUTORIAL plan_to_pose
+        ##
+        ## Planning to a Pose Goal
+        ## ^^^^^^^^^^^^^^^^^^^^^^^
+        ## We can plan a motion for this group to a desired pose for the
+        ## end-effector:
+        pose_goal = geometry_msgs.msg.Pose()
+        
+        pose_goal.position.x = x
+        pose_goal.position.y = y
+        pose_goal.position.z = z
+        
+        pose_goal.orientation.x = qx
+        pose_goal.orientation.y = qy
+        pose_goal.orientation.z = qz
+        pose_goal.orientation.w = qw
 
-                pose_goal.orientation.x = qx
-                pose_goal.orientation.y = qy
-                pose_goal.orientation.z = qz
-                pose_goal.orientation.w = qw
+        print("Goal position")
+        print("x: ", pose_goal.position.x)
+        print("y: ", pose_goal.position.y)
+        print("z: ", pose_goal.position.z)
+        move_group.set_pose_target(pose_goal)
+    
+        # Plan a motion from the current state to the target state
+        plan = move_group.plan()
+        # print(plan)
 
-                pose_goal.position.x = x
-                pose_goal.position.y = y
-                pose_goal.position.z = z
+        # Check if a valid plan is found
+        # if plan[0]:
+        #     # Extract the joint positions from the trajectory
+        #     final_joint_positions = plan.joint_trajectory.points[-1].positions
+        #     print("Final Joint Positions:", final_joint_positions.points.positions)
+        #     print ()
+        #     # break
+        # else:
+        #     print("No valid plan found!")
+        # # except KeyError:
+        # #         print("Invalid input. Final position cannot be executed. Please re-enter positions below:")
+        move_group.clear_pose_targets()
 
-                move_group.set_pose_target(pose_goal)
-
-                print("Here are the final positions you entered:")
-                print("x: ", pose_goal.position.x)
-                print("y: ", pose_goal.position.y)
-                print("z: ", pose_goal.position.z)
-
-                        # Initialize the MoveIt Commander
-                moveit_commander.roscpp_initialize(sys.argv)
-
-                # Create a `RobotCommander` object to control the robot
-                robot = moveit_commander.RobotCommander()
-
-                # Create a `MoveGroupCommander` object for the robot arm's planning group
-                group_name = "gripper"  # Replace with the name of your planning group
-                move_group = moveit_commander.MoveGroupCommander(group_name)
-
-                # Set a target pose for the end-effector
-                target_pose = move_group.get_current_pose()
-                target_pose.pose.position.x += 0.1  # Move 0.1 meters in the X direction
-
-                # Set the target pose for planning
-                # move_group.set_pose_target(pose_goal)
-                move_group.set_pose_target(target_pose)       
-
-                # Plan a motion from the current state to the target state
-                plan = move_group.plan()
-                print(plan)
-
-                # Check if a valid plan is found
-                if plan:
-                    # Extract the joint positions from the trajectory
-                    final_joint_positions = plan.joint_trajectory.points[-1].positions
-                    print("Final Joint Positions:", final_joint_positions)
-                    print ()
-                    break
-                else:
-                    print("No valid plan found!")
-            except KeyError:
-                print("Invalid input. Final position cannot be executed. Please re-enter positions below:")
-
-        return (pose_goal)
+        return (plan)
 
     def go_gripper(self):
 
@@ -611,7 +588,8 @@ class MoveGroupPythonInterfaceTutorial(object):
          ## We use the constant `tau = 2*pi <https://en.wikipedia.org/wiki/Turn_(angle)#Tau_proposals>`_ for convenience:
          # We get the joint values from the group and change some of the values:
          joint_goal = move_group.get_current_joint_values()
-         joint_goal[0] = 0
+         hanstest = float(input("gripper:" ))
+         joint_goal[0] = hanstest
         #  joint_goal[1] = -tau / 8
         #  joint_goal[2] = 0
         #  joint_goal[3] = -tau / 4
@@ -630,8 +608,8 @@ class MoveGroupPythonInterfaceTutorial(object):
 
          # For testing:
          current_joints = move_group.get_current_joint_values()
-         print("This is the current joint for gripper: ")
-         print(current_joints)
+        #  print("This is the current joint for gripper: ")
+        #  print(current_joints)
          return all_close(joint_goal, current_joints, 0.01)
 
 def main():
@@ -672,13 +650,21 @@ def main():
     #     print("gripper completed, please select destination")
 
         #generate a random valid end effector pose
-        tutorial.show_current_ef_pose()
+        # tutorial.show_current_ef_pose()
 
-        input("Press 'Enter' to input end effector position below: ")
-        tutorial.plan_robot_position()
+        input("Press 'Enter' to move to Start")
+        tutorial.go_to_pose_goal(0.017180438115980756,-0.1691767132052658,0.1216113630056665,-0.052562863626115994,0.26931570040637953,0.9575907421133412,0.08789863196241476)
+        # tutorial.execute_plan(plan1)
 
-        input("Press 'Enter' to input gripper joint position below:")
-        tutorial.go_gripper()
+        # input("Press 'Enter' to Grip")
+        # tutorial.go_gripper()
+
+        # input("Press 'Enter' to move to Goal")
+        tutorial.go_to_pose_goal(0.05527525900987344,0.09857281864683994,0.16479277701879433,-0.4232229996787383,-0.8243436364788402,0.37569818942810435,0.013810575665648863)
+        # tutorial.execute_plan(plan2)
+
+        # input("Press 'Enter' to release gripper")
+        # tutorial.go_gripper()
 
         # input("============ Press `Enter` to plan and display a Cartesian path ...")
         # cartesian_plan, fraction = tutorial.plan_cartesian_path()
