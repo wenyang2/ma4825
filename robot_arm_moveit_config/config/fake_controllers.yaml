@@ -10,8 +10,18 @@ controller_list:
       - joint1
       - joint2
       - joint3
+  - name: fake_all_controller
+    type: $(arg fake_execution_type)
+    joints:
+      - joint0
+      - joint1
+      - joint2
+      - joint3
+      - joint4
 initial:  # Define initial robot poses.
   - group: gripper
     pose: closed
   - group: arm_no_grip
-    pose: pose1
+    pose: home
+  - group: all
+    pose: home
