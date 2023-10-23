@@ -68,12 +68,7 @@ from std_msgs.msg import String
 from moveit_commander.conversions import pose_to_list
 
 ## END_SUB_TUTORIAL
-goal1 = [0.139003192135, -0.0259201327342, 0.00938585173389, 
-        -0.00651086238563, -0.00625031012939, 0.721997849462,
-        0.691836431294]
-goal2 = [-0.0599908811538, -0.0284971194932, 0.345502939487, 
-        -0.707133595687, -0.707079965143, 3.70295011487e-05,
-        3.96204279872e-05]
+
 
 
 def all_close(goal, actual, tolerance):
@@ -215,7 +210,7 @@ class MoveGroupPythonInterfaceTutorial(object):
         # For testing:
         current_joints = move_group.get_current_joint_values()
         return all_close(joint_goal, current_joints, 0.01)
-
+    
     def go_to_pose_goal(self, x, y, z, qx, qy, qz,qw):
         # Copy class variables to local variables to make the web tutorials more clear.
         # In practice, you should use the class variables directly unless you have a good
@@ -622,6 +617,54 @@ class MoveGroupPythonInterfaceTutorial(object):
         #  print("This is the current joint for gripper: ")
         #  print(current_joints)
          return all_close(joint_goal, current_joints, 0.01)
+    
+    def modified_go_to_pose_goal(self, x, y, z, qx, qy, qz,qw):
+
+        from moveit_commander import MoveGroupCommander
+
+        # Initialize the MoveGroupCommander for your robot arm
+        move_group = MoveGroupCommander("arm_no_grip")
+        pose_goal = geometry_msgs.msg.Pose()
+
+        count = 0
+        angle = 90
+        while angle <= 271:
+
+            qx = 0.0
+            qy = 0.0
+            qz = np.sin(angle / 2.0)
+            qw = np.cos(angle / 2.0)
+
+            pose_goal.orientation.x = qx
+            pose_goal.orientation.y = qy
+            pose_goal.orientation.z = qz
+            pose_goal.orientation.w = qw
+
+            pose_goal.position.x = x
+            pose_goal.position.y = y
+            pose_goal.position.z = z
+
+            move_group.set_planning_time(1)
+            move_group.set_pose_target(pose_goal)
+            success = move_group.go(wait=True)
+            angle += 1
+            count += 1
+
+            if success == True:
+                break
+                
+            
+        print(count)
+        # Calling `stop()` ensures that there is no residual movement
+        move_group.stop()
+
+        move_group.clear_pose_targets()
+        current_pose = self.move_group.get_current_pose().pose
+        return all_close(pose_goal, current_pose, 0.01)
+
+
+    
+
     def gripper_close(self):
 
          move_group = self.move_group
@@ -662,6 +705,42 @@ class MoveGroupPythonInterfaceTutorial(object):
         #  print(current_joints)
          return all_close(joint_goal, current_joints, 0.01)
 
+    def go_arm(j0,j1,j2,j3,j4):
+        
+        group_name = "arm_no_grip"  # Replace with the name of your planning group
+        move_group = moveit_commander.MoveGroupCommander(group_name)
+    
+        joint_goal = move_group.get_current_joint_values()
+        joint_goal[0] = j0
+        joint_goal[1] = j1
+        joint_goal[2] = j2
+        joint_goal[3] = j3
+        joint_goal[4] = j4
+     
+        move_group.go(joint_goal, wait=True)
+
+        # Calling ``stop()`` ensures that there is no residual movement
+        move_group.stop()
+
+        ## END_SUB_TUTORIAL
+        return all_close(joint_goal, 0.01)
+    
+    def go_grip(j5):
+        
+        group_name = "gripper"  # Replace with the name of your planning group
+        move_group = moveit_commander.MoveGroupCommander(group_name)
+        joint_goal = move_group.get_current_joint_values()
+
+        joint_goal[0] = j5
+        
+        move_group.go(joint_goal, wait=True)
+
+        # Calling ``stop()`` ensures that there is no residual movement
+        move_group.stop()
+
+        ## END_SUB_TUTORIAL
+        return all_close(joint_goal, 0.01)
+
 def main():
     try:
         print("python blyatttt")
@@ -674,6 +753,82 @@ def main():
     #         "============ Press `Enter` to begin the tutorial by setting up the moveit_commander ..."
         # )
         tutorial = MoveGroupPythonInterfaceTutorial()
+
+
+
+
+
+
+
+
+
+
+
+
+        # Copy paste preset values of each positions, can see from "robot_arm_description_urdfv6.srdf" --> GROUP STATES
+
+        # arm_on_grip ---->[j0,j1,j2,j3,j4]
+        # gripper --->[j5]
+
+        home = []
+        pickup_1 = []
+
+        gripper_open = []
+        gripper_close = []
+        measuring_weight = []
+
+        goal1 = []
+        goal2 = []
+
+        goal3 = []
+        goal4 = []
+
+        input("Press 'Enter' to start execute if load is ready.")
+        
+        while True:
+            tutorial.go_arm(*home) 
+            tutorial.go_grip(*gripper_open)
+            tutorial.go_arm(*pickup_1) 
+            tutorial.go_grip(*gripper_close)
+            tutorial.go_arm(*measuring_weight)
+
+            if weight == "heavy":
+                print("Weight is heavy.")
+                if size == "big":
+                    print("Size is big")
+                    tutorial.go_arm(*goal1)
+                    tutorial.go_grip(*gripper_open)
+                elif size == "small":
+                    print("Size is small")
+                    tutorial.go_arm(*goal2)
+                    tutorial.go_grip(*gripper_open)
+
+                else:
+                    print("size is not big or small-->",size)
+
+            elif weight == "light":
+                print("Weight is light.")
+                if size == "big":
+                    print("Size is big")
+                    tutorial.go_arm(*goal3)
+                    tutorial.go_grip(*gripper_open)
+
+                elif size == "small":
+                    print("Size is small")
+                    tutorial.go_arm(*goal4)
+                    tutorial.go_grip(*gripper_open)
+
+                else:
+                    print("size is not big or small-->",size)
+            else:
+                print("weight is not heavy or light-->",weight)
+            
+            input("Press 'Enter' to execute robot arm if next load is ready: ")
+            
+
+
+
+
 
     #     input(
     #         "============ Press `Enter` to execute a movement using a joint state goal ..."
@@ -701,20 +856,22 @@ def main():
         #generate a random valid end effector pose
         # tutorial.show_current_ef_pose()
         # tutorial.set_pose()
-        input("Press 'Enter' to move to goal1")
-        tutorial.go_to_pose_goal(*goal1)
-        print(" Succeed moving to goal1.")
+        # input("Press 'Enter' to move to goal1")
+        # tutorial.go_to_pose_goal(*goal1)
+        # print(" Succeed moving to goal1.")
 
 
-        # input("Press 'Enter' to close gripper")
-        tutorial.gripper_close()
-        print(" Succeed close gripper.")        
+        # # input("Press 'Enter' to close gripper")
+        # tutorial.gripper_close()
+        # print(" Succeed close gripper.")        
 
-        # input("Press 'Enter' to move to home")
-        tutorial.go_to_pose_goal(*goal2)
-        print(" Succeed moving to goal2.")        
-        # # tutorial.execute_plan(plan1)
+        # # input("Press 'Enter' to move to home")
+        # tutorial.go_to_pose_goal(*goal2)
+        # print(" Succeed moving to goal2.")        
+        # # # tutorial.execute_plan(plan1)
 
+        #modified go to pose goal
+        # tutorial.modified_go_to_pose_goal(*goal1)
         # # input("Press 'Enter' to open gripper")
         # tutorial.gripper_open()
         # print(" Succeed open gripper.")  
